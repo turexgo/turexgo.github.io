@@ -57,7 +57,8 @@ export default function Home() {
         if (mIdx !== monthIdx) return month;
         const newDays = month.days.map((day, dIdx) => {
           if (dIdx !== dayIdx) return day;
-          const newType = day.type === 'work' ? 'off' : 'work';
+          const newType: 'work' | 'off' =
+            day.type === 'work' ? 'off' : 'work';
           return {
             ...day,
             type: newType,
