@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/workapp/',
+  base: '/',
 
   plugins: [react(), tailwindcss()],
 
