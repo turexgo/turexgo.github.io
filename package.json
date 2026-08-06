@@ -16,7 +16,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0"
+    "@types/node": "^24.0.0",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.0",
     "@types/react": "^18.3.1",
