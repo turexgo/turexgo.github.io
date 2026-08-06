@@ -91,9 +91,9 @@ export default function Home() {
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white">Work Schedule Planner</h1>
+              <h1 className="text-xl font-bold tracking-tight text-white">TureXGo</h1>
               <p className="text-xs text-white/40 uppercase tracking-wider font-mono">
-                Tură {rotationType} · Creat de Pavel Dordea
+                Tura {rotationType} · Creat de Pavel Dordea
               </p>
             </div>
           </div>
@@ -351,7 +351,7 @@ export default function Home() {
       {/* FOOTER */}
       <footer className="w-full border-t border-white/10 bg-white/5 py-4 mt-8">
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
-          <span className="text-xs text-white/30 font-mono">Work Schedule Planner · Tură {rotationType}</span>
+          <span className="text-xs text-white/30 font-mono">TureXGo · Tura {rotationType}</span>
           <span className="text-xs text-white/30 font-mono">Creat de <span className="text-cyan-400 font-semibold">Pavel Dordea</span></span>
         </div>
       </footer>
