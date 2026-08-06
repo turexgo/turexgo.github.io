@@ -25,7 +25,7 @@ function addHoursToTime(time: string, hours: number): string {
 export default function Home() {
   const [name, setName] = useState('');
   const [rotationType, setRotationType] = useState<RotationType>('2/2');
-  const [startTime, setStartTime] = useState('07:00');
+  const [startTime, setStartTime] = useState('08:00');
   const [hoursPerDay, setHoursPerDay] = useState<6 | 8>(8);
   const [lastWeekPattern, setLastWeekPattern] = useState<boolean[]>(Array(7).fill(false));
   const [schedule, setSchedule] = useState<MonthSchedule[] | null>(null);
