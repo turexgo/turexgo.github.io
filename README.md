@@ -1,4 +1,4 @@
-# Work Schedule Planner 2/2
+# TureXGo
 
 O aplicatie web pentru planificarea graficului de munca in regim **2/2** (2 zile de lucru, 2 zile libere, ture de 12 ore).
 
