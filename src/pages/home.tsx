@@ -93,14 +93,14 @@ export default function Home() {
             <div>
               <h1 className="text-xl font-bold tracking-tight text-white">TureXGo</h1>
               <p className="text-xs text-white/40 uppercase tracking-wider font-mono">
-                Tura {rotationType} · Creat de Pavel Dordea
+                Grafic {rotationType} · Creat de Pavel Dordea
               </p>
             </div>
           </div>
 
           {/* Rotation selector */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-white/40 uppercase">Tip Tură:</span>
+            <span className="text-xs font-semibold text-white/40 uppercase">Tip Grafic:</span>
             {(['2/2', '5/2'] as RotationType[]).map(rt => (
               <button
                 key={rt}
@@ -351,7 +351,7 @@ export default function Home() {
       {/* FOOTER */}
       <footer className="w-full border-t border-white/10 bg-white/5 py-4 mt-8">
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
-          <span className="text-xs text-white/30 font-mono">TureXGo · Tura {rotationType}</span>
+          <span className="text-xs text-white/30 font-mono">TureXGo · Grafic {rotationType}</span>
           <span className="text-xs text-white/30 font-mono">Creat de <span className="text-cyan-400 font-semibold">Pavel Dordea</span></span>
         </div>
       </footer>
