@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import {
   generateSchedule,
   calculateBreaks,
@@ -25,11 +27,55 @@ function addHoursToTime(time: string, hours: number): string {
 export default function Home() {
   const [name, setName] = useState('');
   const [rotationType, setRotationType] = useState<RotationType>('2/2');
-  const [startTime, setStartTime] = useState('08:00');
-  const [hoursPerDay, setHoursPerDay] = useState<6 | 8>(8);
+  const [startTime, setStartTime] = useState('09:00');
+  const [hours22, setHours22] = useState<10 | 11 | 12>(12); // Ore pentru 2/2
+  const [hoursPerDay, setHoursPerDay] = useState<6 | 8 | 11>(8); // Ore pentru 5/2
   const [lastWeekPattern, setLastWeekPattern] = useState<boolean[]>(Array(7).fill(false));
   const [schedule, setSchedule] = useState<MonthSchedule[] | null>(null);
   const [exportMonths, setExportMonths] = useState<number>(6);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Încărcare din localStorage
+  useEffect(() => {
+    const savedData = localStorage.getItem('turexgo_user_data');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.name) setName(parsed.name);
+        if (parsed.rotationType) setRotationType(parsed.rotationType);
+        if (parsed.startTime && parsed.startTime >= '09:00') setStartTime(parsed.startTime);
+        if (parsed.hours22) setHours22(parsed.hours22);
+        if (parsed.hoursPerDay) setHoursPerDay(parsed.hoursPerDay);
+        if (parsed.lastWeekPattern) setLastWeekPattern(parsed.lastWeekPattern);
+      } catch (e) {
+        console.error('Eroare la parsarea datelor salvate', e);
+      }
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Salvare în localStorage
+  useEffect(() => {
+    if (!isLoaded) return;
+    const dataToSave = {
+      name,
+      rotationType,
+      startTime,
+      hours22,
+      hoursPerDay,
+      lastWeekPattern,
+    };
+    localStorage.setItem('turexgo_user_data', JSON.stringify(dataToSave));
+  }, [name, rotationType, startTime, hours22, hoursPerDay, lastWeekPattern, isLoaded]);
+
+  // Validare ca ora să nu fie sub 09:00
+  const handleStartTimeChange = (val: string) => {
+    if (val < '09:00' && val !== '') {
+      setStartTime('09:00');
+    } else {
+      setStartTime(val);
+    }
+  };
 
   const toggleDay = (index: number) => {
     const np = [...lastWeekPattern];
@@ -37,12 +83,15 @@ export default function Home() {
     setLastWeekPattern(np);
   };
 
+  const activeHours = rotationType === '2/2' ? hours22 : hoursPerDay;
+  const computedEndTime = addHoursToTime(startTime, activeHours);
+
   const handleGenerate = () => {
     const data = generateSchedule({
       rotationType,
       lastWeekPattern,
       startTime,
-      hoursPerDay,
+      hoursPerDay: activeHours,
       monthsCount: 6,
     });
     setSchedule(data);
@@ -50,8 +99,7 @@ export default function Home() {
 
   const toggleDayType = (monthIdx: number, dayIdx: number) => {
     if (!schedule) return;
-    const paidHours = rotationType === '2/2' ? 12 : hoursPerDay;
-    const endT = addHoursToTime(startTime, paidHours);
+    const endT = addHoursToTime(startTime, activeHours);
     setSchedule(prev =>
       prev!.map((month, mIdx) => {
         if (mIdx !== monthIdx) return month;
@@ -64,7 +112,7 @@ export default function Home() {
             type: newType,
             workHours: newType === 'work' ? `${startTime}–${endT}` : undefined,
             breaks: newType === 'work' && rotationType === '2/2' ? calculateBreaks(startTime) : undefined,
-            hoursWorked: newType === 'work' ? paidHours : 0,
+            hoursWorked: newType === 'work' ? activeHours : 0,
           };
         });
         const totalHours = newDays.reduce((sum, d) => sum + (d.hoursWorked ?? 0), 0);
@@ -76,8 +124,6 @@ export default function Home() {
   const handleExport = () => {
     if (schedule) exportToExcel(name, schedule, exportMonths);
   };
-
-  const computedEndTime = addHoursToTime(startTime, rotationType === '2/2' ? 12 : hoursPerDay);
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-[#0a0f1e] text-white overflow-x-hidden">
@@ -131,35 +177,58 @@ export default function Home() {
               />
             </div>
 
-            {/* Time */}
+            {/* Time (Start min 09:00 & Computed End) */}
             <div className="md:col-span-3 space-y-2">
               <label className="text-xs font-semibold text-white/40 uppercase block">
-                {rotationType === '2/2' ? 'Interval Ture (12h)' : 'Oră Start'}
+                Oră Start (Min. 09:00)
               </label>
               <div className="flex items-center gap-2">
                 <input
                   type="time"
+                  min="09:00"
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
                   className="w-full h-10 px-2 bg-white/5 border border-white/10 rounded-md text-sm font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-colors [color-scheme:dark]"
                 />
                 <span className="text-white/40 font-mono">–</span>
-                <div className="w-full h-10 px-2 bg-white/5 border border-white/10 rounded-md text-sm font-mono text-white/40 flex items-center">
+                <div className="w-full h-10 px-2 bg-white/5 border border-white/10 rounded-md text-sm font-mono text-white/60 flex items-center bg-white/5">
                   {computedEndTime}
                 </div>
               </div>
             </div>
 
+            {/* 2/2: hours selection (12, 11, 10) */}
+            {rotationType === '2/2' && (
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-xs font-semibold text-white/40 uppercase block">Durată Tura</label>
+                <div className="flex items-center gap-1 h-10">
+                  {([10, 11, 12] as (10 | 11 | 12)[]).map(h => (
+                    <button
+                      key={h}
+                      onClick={() => setHours22(h)}
+                      className={`flex-1 h-10 rounded-md text-xs font-bold border transition-all ${
+                        hours22 === h
+                          ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
+                          : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
+                      }`}
+                    >
+                      {h}h
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 5/2: hours per day */}
             {rotationType === '5/2' && (
               <div className="md:col-span-2 space-y-2">
                 <label className="text-xs font-semibold text-white/40 uppercase block">Ore / Zi</label>
-                <div className="flex items-center gap-2 h-10">
-                  {([6, 8] as (6 | 8)[]).map(h => (
+                <div className="flex items-center gap-1 h-10">
+                  {([6, 8, 11] as (6 | 8 | 11)[]).map(h => (
                     <button
                       key={h}
                       onClick={() => setHoursPerDay(h)}
-                      className={`flex-1 h-10 rounded-md text-sm font-bold border transition-all ${
+                      className={`flex-1 h-10 rounded-md text-xs font-bold border transition-all ${
                         hoursPerDay === h
                           ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
                           : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
@@ -199,10 +268,10 @@ export default function Home() {
 
             {/* 5/2: info */}
             {rotationType === '5/2' && (
-              <div className="md:col-span-2 space-y-2">
+              <div className="md:col-span-4 space-y-2">
                 <label className="text-xs font-semibold text-white/40 uppercase opacity-0 block">_</label>
                 <div className="h-10 flex items-center px-3 bg-white/5 border border-white/10 rounded-md text-xs text-white/40 font-mono">
-                  Lun–Vin · Sâm–Dum liber
+                  Luni–Vineri lucru · Sâmbătă–Duminică liber
                 </div>
               </div>
             )}
