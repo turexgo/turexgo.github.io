@@ -28,8 +28,8 @@ export default function Home() {
   const [name, setName] = useState('');
   const [rotationType, setRotationType] = useState<RotationType>('2/2');
   const [startTime, setStartTime] = useState('09:00');
-  const [hours22, setHours22] = useState<10 | 11 | 12>(12); // Ore pentru 2/2
-  const [hoursPerDay, setHoursPerDay] = useState<6 | 8 | 11>(8); // Ore pentru 5/2
+  const [hours22, setHours22] = useState<number>(12); // Folosim number pentru a evita conflictele de tip
+  const [hoursPerDay, setHoursPerDay] = useState<number>(8);
   const [lastWeekPattern, setLastWeekPattern] = useState<boolean[]>(Array(7).fill(false));
   const [schedule, setSchedule] = useState<MonthSchedule[] | null>(null);
   const [exportMonths, setExportMonths] = useState<number>(6);
@@ -202,7 +202,7 @@ export default function Home() {
               <div className="md:col-span-2 space-y-2">
                 <label className="text-xs font-semibold text-white/40 uppercase block">Durată Tura</label>
                 <div className="flex items-center gap-1 h-10">
-                  {([10, 11, 12] as (10 | 11 | 12)[]).map(h => (
+                  {([10, 11, 12] as number[]).map(h => (
                     <button
                       key={h}
                       onClick={() => setHours22(h)}
@@ -224,7 +224,7 @@ export default function Home() {
               <div className="md:col-span-2 space-y-2">
                 <label className="text-xs font-semibold text-white/40 uppercase block">Ore / Zi</label>
                 <div className="flex items-center gap-1 h-10">
-                  {([6, 8, 11] as (6 | 8 | 11)[]).map(h => (
+                  {([6, 8, 11] as number[]).map(h => (
                     <button
                       key={h}
                       onClick={() => setHoursPerDay(h)}
