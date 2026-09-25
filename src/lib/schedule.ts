@@ -93,6 +93,7 @@ export interface GenerateParams {
   lastWeekPattern?: boolean[];
   startTime: string;
   hoursPerDay?: 6 | 8;
+  shiftHours22?: 10 | 11 | 12;
   monthsCount?: number;
 }
 
@@ -102,6 +103,7 @@ export function generateSchedule(params: GenerateParams): MonthSchedule[] {
     lastWeekPattern = Array(7).fill(false),
     startTime,
     hoursPerDay = 8,
+    shiftHours22 = 12,
     monthsCount = 6,
   } = params;
 
@@ -111,7 +113,7 @@ export function generateSchedule(params: GenerateParams): MonthSchedule[] {
 
   if (rotationType === "2/2") {
     const baseDate = getBaseDate22(lastWeekPattern) || today;
-    const endTime = addHoursToTime(startTime, 12);
+    const endTime = addHoursToTime(startTime, shiftHours22);
     const workHoursStr = `${startTime}–${endTime}`;
     const breaksCache = calculateBreaks(startTime);
 
@@ -127,14 +129,14 @@ export function generateSchedule(params: GenerateParams): MonthSchedule[] {
         const cycleIndex = ((diff % 4) + 4) % 4;
         const isWork = cycleIndex === 0 || cycleIndex === 1;
 
-        if (isWork) totalHours += 12;
+        if (isWork) totalHours += shiftHours22;
 
         days.push({
           date,
           type: isWork ? "work" : "off",
           workHours: isWork ? workHoursStr : undefined,
           breaks: isWork ? breaksCache : undefined,
-          hoursWorked: isWork ? 12 : 0,
+          hoursWorked: isWork ? shiftHours22 : 0,
         });
       }
 
