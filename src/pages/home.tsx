@@ -22,14 +22,69 @@ function addHoursToTime(time: string, hours: number): string {
   return `${th.toString().padStart(2, '0')}:${tm.toString().padStart(2, '0')}`;
 }
 
+const STORAGE_KEY = 'turexgo:saved-state:v1';
+const MIN_START_TIME = '09:00';
+
+interface SavedState {
+  name: string;
+  rotationType: RotationType;
+  startTime: string;
+  hoursPerDay: 6 | 8;
+  shiftHours22: 10 | 11 | 12;
+  lastWeekPattern: boolean[];
+  exportMonths: number;
+  schedule: MonthSchedule[] | null;
+}
+
+function loadSavedState(): SavedState | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed.schedule) {
+      parsed.schedule = parsed.schedule.map((month: any) => ({
+        ...month,
+        monthDate: new Date(month.monthDate),
+        days: month.days.map((day: any) => ({ ...day, date: new Date(day.date) })),
+      }));
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export default function Home() {
-  const [name, setName] = useState('');
-  const [rotationType, setRotationType] = useState<RotationType>('2/2');
-  const [startTime, setStartTime] = useState('08:00');
-  const [hoursPerDay, setHoursPerDay] = useState<6 | 8>(8);
-  const [lastWeekPattern, setLastWeekPattern] = useState<boolean[]>(Array(7).fill(false));
-  const [schedule, setSchedule] = useState<MonthSchedule[] | null>(null);
-  const [exportMonths, setExportMonths] = useState<number>(6);
+  const saved = loadSavedState();
+
+  const [name, setName] = useState(saved?.name ?? '');
+  const [rotationType, setRotationType] = useState<RotationType>(saved?.rotationType ?? '2/2');
+  const [startTime, setStartTime] = useState(saved?.startTime ?? '09:00');
+  const [hoursPerDay, setHoursPerDay] = useState<6 | 8>(saved?.hoursPerDay ?? 8);
+  const [shiftHours22, setShiftHours22] = useState<10 | 11 | 12>(saved?.shiftHours22 ?? 12);
+  const [lastWeekPattern, setLastWeekPattern] = useState<boolean[]>(saved?.lastWeekPattern ?? Array(7).fill(false));
+  const [schedule, setSchedule] = useState<MonthSchedule[] | null>(saved?.schedule ?? null);
+  const [exportMonths, setExportMonths] = useState<number>(saved?.exportMonths ?? 6);
+
+  // Persist whenever anything relevant changes, so the next visit on this
+  // device/browser shows the same schedule already generated.
+  React.useEffect(() => {
+    const state: SavedState = {
+      name,
+      rotationType,
+      startTime,
+      hoursPerDay,
+      shiftHours22,
+      lastWeekPattern,
+      exportMonths,
+      schedule,
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // storage unavailable (private mode, quota, etc.) — ignore silently
+    }
+  }, [name, rotationType, startTime, hoursPerDay, shiftHours22, lastWeekPattern, exportMonths, schedule]);
 
   const toggleDay = (index: number) => {
     const np = [...lastWeekPattern];
@@ -43,6 +98,7 @@ export default function Home() {
       lastWeekPattern,
       startTime,
       hoursPerDay,
+      shiftHours22,
       monthsCount: 6,
     });
     setSchedule(data);
@@ -50,7 +106,7 @@ export default function Home() {
 
   const toggleDayType = (monthIdx: number, dayIdx: number) => {
     if (!schedule) return;
-    const paidHours = rotationType === '2/2' ? 12 : hoursPerDay;
+    const paidHours = rotationType === '2/2' ? shiftHours22 : hoursPerDay;
     const endT = addHoursToTime(startTime, paidHours);
     setSchedule(prev =>
       prev!.map((month, mIdx) => {
@@ -77,7 +133,11 @@ export default function Home() {
     if (schedule) exportToExcel(name, schedule, exportMonths);
   };
 
-  const computedEndTime = addHoursToTime(startTime, rotationType === '2/2' ? 12 : hoursPerDay);
+  const handleStartTimeChange = (value: string) => {
+    setStartTime(value < MIN_START_TIME ? MIN_START_TIME : value);
+  };
+
+  const computedEndTime = addHoursToTime(startTime, rotationType === '2/2' ? shiftHours22 : hoursPerDay);
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-[#0a0f1e] text-white overflow-x-hidden">
@@ -134,13 +194,14 @@ export default function Home() {
             {/* Time */}
             <div className="md:col-span-3 space-y-2">
               <label className="text-xs font-semibold text-white/40 uppercase block">
-                {rotationType === '2/2' ? 'Interval Ture (12h)' : 'Oră Start'}
+                {rotationType === '2/2' ? `Interval Tură (${shiftHours22}h)` : 'Oră Start'}
               </label>
               <div className="flex items-center gap-2">
                 <input
                   type="time"
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  min={MIN_START_TIME}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
                   className="w-full h-10 px-2 bg-white/5 border border-white/10 rounded-md text-sm font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-colors [color-scheme:dark]"
                 />
                 <span className="text-white/40 font-mono">–</span>
@@ -149,6 +210,28 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* 2/2: shift length */}
+            {rotationType === '2/2' && (
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-xs font-semibold text-white/40 uppercase block">Ore / Tură</label>
+                <div className="flex items-center gap-2 h-10">
+                  {([10, 11, 12] as (10 | 11 | 12)[]).map(h => (
+                    <button
+                      key={h}
+                      onClick={() => setShiftHours22(h)}
+                      className={`flex-1 h-10 rounded-md text-sm font-bold border transition-all ${
+                        shiftHours22 === h
+                          ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
+                          : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
+                      }`}
+                    >
+                      {h}h
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 5/2: hours per day */}
             {rotationType === '5/2' && (
