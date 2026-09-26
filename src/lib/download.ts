@@ -2,7 +2,7 @@
 // trimite poza/Excel-ul în chatul Telegram al utilizatorului. Completează-l
 // cu URL-ul tău real după ce publici Worker-ul pe Cloudflare, altfel
 // trimiterea în chat nu poate funcționa.
-const TELEGRAM_WORKER_URL = 'https://hot-cobra-3037.turexgo.deno.net/';
+const TELEGRAM_WORKER_URL = 'https://turexgo-bot-bridge.zsh6c969w4.workers.dev/';
 
 // Detectează dacă suntem într-un Mini App Telegram real (deschis dintr-un bot
 // printr-un buton web_app). telegram-web-app.js expune window.Telegram.WebApp.
